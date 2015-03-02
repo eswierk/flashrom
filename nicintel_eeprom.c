@@ -295,9 +295,6 @@ static int nicintel_ee_shutdown(void *eecp)
 
 int nicintel_ee_init(void)
 {
-	if (rget_io_perms())
-		return 1;
-
 	struct pci_dev *dev = pcidev_init(nics_intel_ee, PCI_BASE_ADDRESS_0);
 	if (!dev)
 		return 1;

@@ -125,9 +125,6 @@ int ogp_spi_init(void)
 	}
 	free(type);
 
-	if (rget_io_perms())
-		return 1;
-
 	dev = pcidev_init(ogp_spi, PCI_BASE_ADDRESS_0);
 	if (!dev)
 		return 1;

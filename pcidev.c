@@ -165,6 +165,12 @@ static int pcidev_shutdown(void *data)
 
 int pci_init_common(void)
 {
+#if IS_LINUX
+	/* On Linux, I/O privileges are not needed for mmap access to PCI resources in /dev/mem. */
+#else
+	if (rget_io_perms())
+		return 1;
+#endif
 	if (pacc != NULL) {
 		msg_perr("%s: Tried to allocate a new PCI context, but there is still an old one!\n"
 			 "Please report a bug at flashrom@flashrom.org\n", __func__);

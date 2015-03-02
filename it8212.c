@@ -51,9 +51,6 @@ static const struct par_master par_master_it8212 = {
 
 int it8212_init(void)
 {
-	if (rget_io_perms())
-		return 1;
-
 	struct pci_dev *dev = pcidev_init(devs_it8212, PCI_ROM_ADDRESS);
 	if (!dev)
 		return 1;

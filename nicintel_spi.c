@@ -187,9 +187,6 @@ int nicintel_spi_init(void)
 	struct pci_dev *dev = NULL;
 	uint32_t tmp;
 
-	if (rget_io_perms())
-		return 1;
-
 	dev = pcidev_init(nics_intel_spi, PCI_BASE_ADDRESS_0);
 	if (!dev)
 		return 1;

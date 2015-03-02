@@ -74,9 +74,6 @@ int satasii_init(void)
 	uint32_t addr;
 	uint16_t reg_offset;
 
-	if (rget_io_perms())
-		return 1;
-
 	dev = pcidev_init(satas_sii, PCI_BASE_ADDRESS_0);
 	if (!dev)
 		return 1;
