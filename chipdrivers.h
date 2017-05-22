@@ -60,6 +60,9 @@ int spi_nbyte_program(struct flashctx *flash, unsigned int addr, const uint8_t *
 int spi_nbyte_read(struct flashctx *flash, unsigned int addr, uint8_t *bytes, unsigned int len);
 int spi_read_chunked(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len, unsigned int chunksize);
 int spi_write_chunked(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len, unsigned int chunksize);
+int spi_eeprom_write(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
+int spi_eeprom_read(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len);
+int probe_spi_eeprom(struct flashctx *flash);
 
 /* spi25_statusreg.c */
 uint8_t spi_read_status_register(struct flashctx *flash);

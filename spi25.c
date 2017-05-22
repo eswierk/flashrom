@@ -1181,3 +1181,82 @@ bailout:
 		msg_cerr("%s failed to disable AAI mode.\n", __func__);
 	return SPI_GENERIC_ERROR;
 }
+
+int spi_eeprom_write(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len)
+{
+	int result;
+	unsigned char cmd[] = {
+		JEDEC_BYTE_PROGRAM,
+		(start >> 8) & 0xff,
+		(start >> 0) & 0xff,
+	};
+	unsigned char cbuf[sizeof(cmd) + flash->chip->page_size];
+	struct spi_command cmds[] = {
+	{
+		.writecnt	= 1,
+		.writearr	= (const unsigned char[]){ JEDEC_WREN },
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}, {
+		.writecnt	= sizeof(cmd) + len,
+		.writearr	= cbuf,
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}, {
+		.writecnt	= 0,
+		.writearr	= NULL,
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}};
+
+	if (!len) {
+		msg_cerr("%s called for zero-length write\n", __func__);
+		return 1;
+	}
+	if (len > flash->chip->page_size) {
+		msg_cerr("%s called for too long a write\n", __func__);
+		return 1;
+	}
+
+	memcpy(&cbuf[0], cmd, sizeof(cmd));
+	memcpy(&cbuf[sizeof(cmd)], buf, len);
+
+	result = spi_send_multicommand(flash, cmds);
+	if (result) {
+		msg_cerr("%s failed during command execution\n",
+			__func__);
+		return result;
+	}
+	while (spi_read_status_register(flash) & SPI_SR_WIP)
+		programmer_delay(10);
+	return 0;
+}
+
+int spi_eeprom_read(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len)
+{
+	int result;
+	const unsigned char cmd[] = {
+		JEDEC_READ,
+		(start >> 8) & 0xff,
+		(start >> 0) & 0xff,
+	};
+	result = spi_send_command(flash, sizeof(cmd), len, cmd, buf);
+	if (result) {
+		msg_cerr("%s failed during command execution\n",
+			__func__);
+		return result;
+	}
+	return 0;
+}
+
+int probe_spi_eeprom(struct flashctx *flash)
+{
+	/* Match iff chip name was specified on command line */
+	if (!chip_to_probe || strcmp(chip_to_probe, flash->chip->name))
+		return 0;
+	flash->chip->gran = write_gran_1byte_implicit_erase; /* no separate erase command */
+	flash->chip->block_erasers->block_erase = (void *)-1;
+	flash->chip->block_erasers->eraseblocks[0].size = flash->chip->page_size;
+	flash->chip->block_erasers->eraseblocks[0].count = (flash->chip->total_size * 1024) / flash->chip->page_size;
+	return 1;
+}
