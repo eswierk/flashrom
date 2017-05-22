@@ -3231,6 +3231,22 @@ const struct flashchip flashchips[] = {
 	},
 
 	{
+		.vendor		= "Atmel",
+		.name		= "AT25256",
+		.bustype	= BUS_SPI,
+		.manufacture_id	= ATMEL_ID,
+		.model_id	= GENERIC_DEVICE_ID,
+		.total_size	= 32,
+		.page_size	= 64,
+		.feature_bits	= 0,
+		.tested		= TEST_OK_PREW,
+		.probe		= probe_spi_eeprom,
+		.probe_timing	= TIMING_ZERO,
+		.write		= spi_eeprom_write,
+		.read		= spi_eeprom_read,
+	},
+
+	{
 		.vendor		= "Catalyst",
 		.name		= "CAT28F512",
 		.bustype	= BUS_PARALLEL,
