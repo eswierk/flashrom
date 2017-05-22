@@ -111,6 +111,9 @@ enum programmer {
 #if CONFIG_CH341A_SPI == 1
 	PROGRAMMER_CH341A_SPI,
 #endif
+#if CONFIG_LINUX_GPIO_SPI == 1
+	PROGRAMMER_LINUX_GPIO_SPI,
+#endif
 	PROGRAMMER_INVALID /* This must always be the last entry. */
 };
 
@@ -167,6 +170,9 @@ enum bitbang_spi_master_type {
 #endif
 #if CONFIG_OGP_SPI == 1
 	BITBANG_SPI_MASTER_OGP,
+#endif
+#if CONFIG_LINUX_GPIO_SPI == 1
+	BITBANG_SPI_MASTER_LINUX_GPIO,
 #endif
 };
 
@@ -543,6 +549,10 @@ void ch341a_spi_delay(unsigned int usecs);
 extern const struct dev_entry devs_ch341a_spi[];
 #endif
 
+#if CONFIG_LINUX_GPIO_SPI == 1
+int linux_gpio_spi_init(void);
+#endif
+
 /* flashrom.c */
 struct decode_sizes {
 	uint32_t parallel;
@@ -584,7 +594,7 @@ enum spi_controller {
 #if CONFIG_DEDIPROG == 1
 	SPI_CONTROLLER_DEDIPROG,
 #endif
-#if CONFIG_OGP_SPI == 1 || CONFIG_NICINTEL_SPI == 1 || CONFIG_RAYER_SPI == 1 || CONFIG_PONY_SPI == 1 || (CONFIG_INTERNAL == 1 && (defined(__i386__) || defined(__x86_64__)))
+#if CONFIG_LINUX_GPIO_SPI == 1 || CONFIG_OGP_SPI == 1 || CONFIG_NICINTEL_SPI == 1 || CONFIG_RAYER_SPI == 1 || CONFIG_PONY_SPI == 1 || (CONFIG_INTERNAL == 1 && (defined(__i386__) || defined(__x86_64__)))
 	SPI_CONTROLLER_BITBANG,
 #endif
 #if CONFIG_LINUX_SPI == 1

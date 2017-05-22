@@ -404,6 +404,18 @@ const struct programmer_entry programmer_table[] = {
 	},
 #endif
 
+#if CONFIG_LINUX_GPIO_SPI == 1
+	{
+		.name			= "linux_gpio_spi",
+		.type			= OTHER,
+		.devs.note		= "Linux GPIO bitbang SPI master",
+		.init			= linux_gpio_spi_init,
+		.map_flash_region	= fallback_map,
+		.unmap_flash_region	= fallback_unmap,
+		.delay			= internal_delay,
+	},
+#endif
+
 	{0}, /* This entry corresponds to PROGRAMMER_INVALID. */
 };
 

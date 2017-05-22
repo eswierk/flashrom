@@ -350,6 +350,11 @@ UNSUPPORTED_FEATURES += CONFIG_LINUX_SPI=yes
 else
 override CONFIG_LINUX_SPI = no
 endif
+ifeq ($(CONFIG_LINUX_GPIO_SPI), yes)
+UNSUPPORTED_FEATURES += CONFIG_LINUX_GPIO_SPI=yes
+else
+override CONFIG_LINUX_GPIO_SPI = no
+endif
 ifeq ($(CONFIG_MSTARDDC_SPI), yes)
 UNSUPPORTED_FEATURES += CONFIG_MSTARDDC_SPI=yes
 else
@@ -639,6 +644,9 @@ CONFIG_SATAMV ?= yes
 # Enable Linux spidev interface by default. We disable it on non-Linux targets.
 CONFIG_LINUX_SPI ?= yes
 
+# Enable Linux gpio bit-banged interface by default. We disable it on non-Linux targets.
+CONFIG_LINUX_GPIO_SPI ?= yes
+
 # Always enable ITE IT8212F PATA controllers for now.
 CONFIG_IT8212 ?= yes
 
@@ -708,7 +716,11 @@ else
 ifeq ($(CONFIG_OGP_SPI), yes)
 override CONFIG_BITBANG_SPI = yes
 else
+ifeq ($(CONFIG_LINUX_GPIO_SPI), yes)
+override CONFIG_BITBANG_SPI = yes
+else
 CONFIG_BITBANG_SPI ?= no
+endif
 endif
 endif
 endif
@@ -918,6 +930,11 @@ ifeq ($(CONFIG_LINUX_SPI), yes)
 # This is a totally ugly hack.
 FEATURE_CFLAGS += $(call debug_shell,grep -q "LINUX_SPI_SUPPORT := yes" .features && printf "%s" "-D'CONFIG_LINUX_SPI=1'")
 PROGRAMMER_OBJS += linux_spi.o
+endif
+
+ifeq ($(CONFIG_LINUX_GPIO_SPI), yes)
+FEATURE_CFLAGS += -D'CONFIG_LINUX_GPIO_SPI=1'
+PROGRAMMER_OBJS += linux_gpio_spi.o
 endif
 
 ifeq ($(CONFIG_MSTARDDC_SPI), yes)
