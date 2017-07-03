@@ -640,8 +640,88 @@ int spi_prettyprint_status_register_en25s_wp(struct flashctx *flash)
 
 /* === Intel/Numonyx/Micron - Spansion === */
 
+static int spi_write_n25q_nonvolatile_config_register(struct flashctx *flash, int config)
+{
+	int result;
+	int i = 0;
+	struct spi_command cmds[] = {
+	{
+		.writecnt	= JEDEC_WREN_OUTSIZE,
+		.writearr	= (const unsigned char[]){ JEDEC_WREN },
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}, {
+		.writecnt	= 3,
+		.writearr	= (const unsigned char[]){ 0xB1,
+							   (unsigned char) config,
+							   (unsigned char) (config >> 8) },
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}, {
+		.writecnt	= 0,
+		.writearr	= NULL,
+		.readcnt	= 0,
+		.readarr	= NULL,
+	}};
+
+	result = spi_send_multicommand(flash, cmds);
+	if (result) {
+		msg_cerr("%s failed during command execution\n", __func__);
+		/* No point in waiting for the command to complete if execution
+		 * failed.
+		 */
+		return result;
+	}
+	while (spi_read_status_register(flash) & SPI_SR_WIP) {
+		if (++i > 500) {
+			msg_cerr("Error: WIP bit never cleared after write_n25q_nonvolatile_config_register\n");
+			return TIMEOUT_ERROR;
+		}
+		programmer_delay(10 * 1000);
+	}
+	return 0;
+}
+
+static uint16_t spi_read_n25q_nonvolatile_config_register(struct flashctx *flash)
+{
+	static const unsigned char cmd[] = { 0xB5 };
+	unsigned char readarr[2];
+	int ret;
+
+	ret = spi_send_command(flash, sizeof(cmd), sizeof(readarr), cmd, readarr);
+	if (ret)
+		msg_cerr("read_n25q_nonvolatile_config_register failed!\n");
+
+	return (((uint16_t) readarr[1]) << 8) | readarr[0];
+}
+
 int spi_disable_blockprotect_n25q(struct flashctx *flash)
 {
+	if (flash->chip->feature_bits & FEATURE_4BA_SUPPORT) {
+		if (0) {
+			/* Set nonvolatile configuration bit so chip powers up in 4-byte addressing
+			 * mode, useful for compatibility with Intel chipsets that do not send a
+			 * WRITE ENABLE command (0x06) before sending an ENTER 4-BYTE ADDRESS MODE
+			 * command (0xb7).
+			 *
+			 * FIXME: changing nonvolatile config shouldn't happen automatically; make
+			 * it an explicit command-line flag.
+			 */
+			uint16_t nvcr = spi_read_n25q_nonvolatile_config_register(flash);
+			if (nvcr & 0x0001) {
+				msg_cdbg("Setting 4-byte addressing mode on power up\n");
+				spi_write_n25q_nonvolatile_config_register(flash, nvcr & 0xfffe);
+				nvcr = spi_read_n25q_nonvolatile_config_register(flash);
+			}
+			if (nvcr & 0x0001) {
+				msg_cerr("Failed to set 4-byte addressing mode on power up\n");
+				return 1;
+			}
+		}
+		msg_cinfo("Chip is configured for %d-byte addressing mode on power-up\n",
+			  spi_read_n25q_nonvolatile_config_register(flash) & 0x0001 ? 3 : 4);
+	}
+
 	return spi_disable_blockprotect_generic(flash, 0x5C, 1 << 7, 0, 0xFF);
 }
 
